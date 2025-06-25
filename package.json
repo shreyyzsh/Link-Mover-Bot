@@ -1,0 +1,20 @@
+{
+  "name": "discord-link-mover-bot",
+  "version": "1.0.0",
+  "description": "A Discord bot that moves Spotify and YouTube links between threads",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node dead.js",
+    "dev": "nodemon dead.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.14.1",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "keywords": ["discord", "bot", "spotify", "youtube", "links"],
+  "author": "shreyy",
+  "license": "MIT"
+}
