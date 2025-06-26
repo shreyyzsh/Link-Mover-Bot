@@ -1,4 +1,5 @@
 const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
+
 require('dotenv').config();
 
 const client = new Client({
@@ -32,15 +33,21 @@ function createYouTubeEmbed(url, messageInfo) {
     const videoId = getYouTubeVideoId(url);
     if (!videoId) return null;
 
+    const description = `Posted by **${messageInfo.author}** <t:${Math.floor(messageInfo.timestamp / 1000)}:R>`;
+
+    const footerText = `${new Date(messageInfo.timestamp).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric'})}`;
+
     const embed = new EmbedBuilder()
         .setColor('#FF0000')
         .setTitle('🎵 YouTube Link')
         .setURL(url)
+        .setDescription(description)
         .setThumbnail(`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`)
-        .addFields([
-            { name: 'Original Message', value: `By ${messageInfo.author} in ${messageInfo.channel}`, inline: true },
-            { name: 'Posted', value: `<t:${Math.floor(messageInfo.timestamp / 1000)}:R>`, inline: true }
-        ]);
+        // .addFields([
+        //     { name: 'Original Message', value: `By ${messageInfo.author} in ${messageInfo.channel}`, inline: true },
+        //     { name: 'Posted', value: `<t:${Math.floor(messageInfo.timestamp / 1000)}:R>`, inline: true }
+        // ]);
+        .setFooter({ text: footerText });
 
     return embed;
 }
@@ -49,15 +56,26 @@ function createYouTubeEmbed(url, messageInfo) {
 function createSpotifyEmbed(url, messageInfo) {
     const spotifyInfo = getSpotifyInfo(url);
     if (!spotifyInfo) return null;
+     
+    // Determine if it's a playlist or track for better description
+    const contentType = spotifyInfo.type === 'playlist' ? '🎧 Spotify Playlist' : '🎵 Spotify Track';
+
+    const author = messageInfo.author;
+    const dateOfMsg = new Date(messageInfo.timestamp).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+
+    //const description = `Posted by ${messageInfo.author} on ${new Date(messageInfo.timestamp).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}`;
+    
+    const footerText = `${dateOfMsg}`;
 
     const embed = new EmbedBuilder()
         .setColor('#1DB954')
-        .setTitle(`🎵 Spotify ${spotifyInfo.type.charAt(0).toUpperCase() + spotifyInfo.type.slice(1)}`)
         .setURL(url)
-        .addFields([
-            { name: 'Original Message', value: `By ${messageInfo.author} in ${messageInfo.channel}`, inline: true },
+        .setTitle(contentType)
+        .addFields(
+            { name: 'Message', value: `By **${author}** in ${messageInfo.channel || 'Unknown'}`, inline: true },
             { name: 'Posted', value: `<t:${Math.floor(messageInfo.timestamp / 1000)}:R>`, inline: true }
-        ]);
+        )
+        .setFooter({ text: footerText });
 
     return embed;
 }
@@ -158,9 +176,9 @@ client.on('messageCreate', async (message) => {
             return message.reply('Could not find one or both threads. Make sure the IDs are correct.');
         }
 
-        if (!sourceThread.isThread() || !targetThread.isThread()) {
-            return message.reply('Both source and target must be threads.');
-        }
+        // if (!sourceThread.isThread() || !targetThread.isThread()) {
+        //     return message.reply('Both source and target must be threads.');
+        // }
 
         // Check permissions
         if (!targetThread.permissionsFor(client.user).has(['SendMessages', 'EmbedLinks'])) {
@@ -199,7 +217,11 @@ client.on('messageCreate', async (message) => {
                     
                     // Small delay to avoid rate limiting
                     await new Promise(resolve => setTimeout(resolve, 1500));
-                }
+                } 
+            } catch (error) {
+                console.error('Error sending link:', error);
+            }
+        }
 
         await message.channel.send(`✅ Successfully moved ${movedCount} link(s) to ${targetThread.name}!`);
 
